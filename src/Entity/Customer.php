@@ -29,9 +29,15 @@ class Customer
      */
     private $domains;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Page::class, mappedBy="owner", orphanRemoval=true)
+     */
+    private $pages;
+
     public function __construct()
     {
         $this->domains = new ArrayCollection();
+        $this->pages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -63,7 +69,7 @@ class Customer
     {
         if (!$this->domains->contains($domain)) {
             $this->domains[] = $domain;
-            $domain->setOwner($this);
+            $domain->changeOwner($this);
         }
 
         return $this;
@@ -74,7 +80,37 @@ class Customer
         if ($this->domains->removeElement($domain)) {
             // set the owning side to null (unless already changed)
             if ($domain->getOwner() === $this) {
-                $domain->setOwner(null);
+                $domain->changeOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Page>
+     */
+    public function getPages(): Collection
+    {
+        return $this->pages;
+    }
+
+    public function addPage(Page $page): self
+    {
+        if (!$this->pages->contains($page)) {
+            $this->pages[] = $page;
+            $page->changeOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removePage(Page $page): self
+    {
+        if ($this->pages->removeElement($page)) {
+            // set the owning side to null (unless already changed)
+            if ($page->owner() === $this) {
+                $page->changeOwner(null);
             }
         }
 

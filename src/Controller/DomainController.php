@@ -4,7 +4,8 @@ namespace App\Controller;
 
 use App\Repository\CustomerRepository;
 use App\Repository\DomainRepository;
-use App\Service\AddDomain;
+use App\Service\AddDomainService;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +18,7 @@ class DomainController extends AbstractController
     public function __construct(
         private readonly DomainRepository $domainRepository,
         private readonly CustomerRepository $customerRepository,
-        private readonly AddDomain $addDomain,
+        private readonly AddDomainService $addDomain,
     )
     {
     }
@@ -35,7 +36,7 @@ class DomainController extends AbstractController
 
         $domain = $request->get('domain');
 
-        $domainId = $this->addDomain->__invoke($customer, $domain);
+        $domainId = $this->addDomain->doIt($customer, $domain);
         return $this->json(['id' => $domainId], Response::HTTP_CREATED);
     }
 
@@ -71,9 +72,9 @@ class DomainController extends AbstractController
             throw new NotFoundHttpException();
         }
         if ($domain->isPublic()) {
-            throw new InvalidArgumentException();
+            throw new RuntimeException();
         }
-        $domain->setIsPublic(true);
+        $domain->setAsPublic();
         return new JsonResponse([]);
     }
 
@@ -87,10 +88,10 @@ class DomainController extends AbstractController
             throw new NotFoundHttpException();
         }
         if (!$domain->isPublic()) {
-            throw new InvalidArgumentException();
+            throw new RuntimeException();
         }
 
-        $domain->setIsPublic(false);
+        $domain->setAsPrivate();
         return new JsonResponse();
     }
 }
